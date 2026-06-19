@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import numpy as np
 
 # ==========================================
 # CONFIGURAÇÃO DA PÁGINA
@@ -14,11 +15,10 @@ st.set_page_config(
 )
 
 # ==========================================
-# ESTILOS CSS PERSONALIZADOS - MAIS LIMPO
+# ESTILOS CSS PERSONALIZADOS
 # ==========================================
 st.markdown("""
 <style>
-    /* Cabeçalho principal */
     .main-header {
         background: linear-gradient(135deg, #1a3a5c 0%, #2a6b9e 100%);
         padding: 2rem 2rem 1.5rem 2rem;
@@ -39,8 +39,6 @@ st.markdown("""
         font-size: 1.1rem;
         font-weight: 300;
     }
-    
-    /* Cards de métricas */
     .metric-card {
         background: white;
         padding: 1.2rem;
@@ -72,17 +70,6 @@ st.markdown("""
         color: #9ca3af;
         margin-top: 0.2rem;
     }
-    
-    /* Caixas de informação */
-    .info-box {
-        background: #f0f7ff;
-        padding: 1.25rem;
-        border-radius: 10px;
-        border: 1px solid #dbeafe;
-        border-left: 4px solid #2a6b9e;
-    }
-    
-    /* Botões */
     .stButton > button {
         background: #2a6b9e;
         color: white;
@@ -98,20 +85,11 @@ st.markdown("""
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(42, 107, 158, 0.3);
     }
-    
-    /* Divisor */
     .divider {
         margin: 2rem 0;
         border: none;
         border-top: 2px solid #e5e7eb;
     }
-    
-    /* Sidebar */
-    .css-1d391kg {
-        background: #f8fafc;
-    }
-    
-    /* Títulos das seções */
     .section-title {
         font-size: 1.4rem;
         font-weight: 600;
@@ -124,7 +102,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 1. DADOS PADRÃO
+# DADOS PADRÃO
 # ==========================================
 DEFAULT_INVENTARIO = {
     "Equipamento": ["Torno Mecânico", "Centro de Usinagem CNC", "Fresadora Universal"],
@@ -134,7 +112,7 @@ DEFAULT_INVENTARIO = {
 }
 
 # ==========================================
-# 2. FUNÇÕES DE CÁLCULO
+# FUNÇÕES DE CÁLCULO
 # ==========================================
 def calcular_custos(df_inventario, preco_litro):
     consumo_total_l = df_inventario["Consumo_Anual_Geral_L"].sum()
@@ -155,7 +133,6 @@ def calcular_custos(df_inventario, preco_litro):
     return pd.DataFrame(dados_financeiros)
 
 def criar_graficos(df_inventario, df_financeiro, preco_unitario):
-    # Gráfico 1: Consumo por Equipamento - Visual mais limpo
     fig_consumo = px.bar(
         df_inventario,
         x="Equipamento",
@@ -174,20 +151,12 @@ def criar_graficos(df_inventario, df_financeiro, preco_unitario):
         showlegend=False,
         height=400,
         plot_bgcolor="white",
-        yaxis=dict(
-            title="Consumo (Litros/ano)",
-            gridcolor="#f0f0f0",
-            gridwidth=1
-        ),
-        xaxis=dict(
-            title="",
-            tickangle=0
-        ),
+        yaxis=dict(title="Consumo (Litros/ano)", gridcolor="#f0f0f0", gridwidth=1),
+        xaxis=dict(title=""),
         margin=dict(l=40, r=40, t=40, b=40),
         font=dict(size=12)
     )
     
-    # Gráfico 2: Distribuição de Custos - Mais clean
     df_pie = df_financeiro[df_financeiro["Rubrica"] != "TOTAL PREVISTO"].copy()
     fig_custos = px.pie(
         df_pie,
@@ -209,7 +178,6 @@ def criar_graficos(df_inventario, df_financeiro, preco_unitario):
         legend=dict(orientation="h", yanchor="bottom", y=-0.1)
     )
     
-    # Gráfico 3: Comparativo Volume vs Custo - Eixo duplo mais claro
     df_volume_custo = df_inventario.copy()
     df_volume_custo["Custo_Total"] = df_volume_custo["Consumo_Anual_Geral_L"] * preco_unitario
     
@@ -239,20 +207,8 @@ def criar_graficos(df_inventario, df_financeiro, preco_unitario):
         title="Comparativo: Volume vs Custo por Equipamento",
         height=400,
         plot_bgcolor="white",
-        yaxis=dict(
-            title="Volume (L)",
-            gridcolor="#f0f0f0",
-            gridwidth=1,
-            side="left"
-        ),
-        yaxis2=dict(
-            title="Custo (R$)",
-            overlaying="y",
-            side="right",
-            gridcolor="#f0f0f0",
-            gridwidth=0,
-            showgrid=False
-        ),
+        yaxis=dict(title="Volume (L)", gridcolor="#f0f0f0", gridwidth=1, side="left"),
+        yaxis2=dict(title="Custo (R$)", overlaying="y", side="right", gridcolor="#f0f0f0", gridwidth=0, showgrid=False),
         xaxis=dict(title=""),
         margin=dict(l=40, r=60, t=40, b=40),
         font=dict(size=12),
@@ -262,7 +218,7 @@ def criar_graficos(df_inventario, df_financeiro, preco_unitario):
     return fig_consumo, fig_custos, fig_comparativo
 
 # ==========================================
-# 3. INTERFACE PRINCIPAL
+# INTERFACE PRINCIPAL
 # ==========================================
 st.markdown("""
 <div class="main-header">
@@ -274,7 +230,6 @@ st.markdown("""
 # Sidebar
 with st.sidebar:
     st.markdown("### ⚙️ Configurações")
-    
     st.markdown("---")
     
     preco_unitario = st.number_input(
@@ -287,7 +242,6 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    
     st.markdown("### 📝 Editar Inventário")
     st.caption("Modifique os dados para simular cenários")
     
@@ -300,26 +254,13 @@ with st.sidebar:
     
     col1, col2 = st.columns(2)
     with col1:
-        quantidades = st.text_input(
-            "Quantidade Ativa",
-            value="2,1,1",
-            help="Quantidade de cada equipamento"
-        )
-        volumes = st.text_input(
-            "Volume Individual (L)",
-            value="10,60,15",
-            help="Volume de óleo por equipamento"
-        )
+        quantidades = st.text_input("Quantidade Ativa", value="2,1,1")
+        volumes = st.text_input("Volume Individual (L)", value="10,60,15")
     with col2:
-        consumos = st.text_input(
-            "Consumo Anual (L)",
-            value="40,180,30",
-            help="Consumo total anual por equipamento"
-        )
+        consumos = st.text_input("Consumo Anual (L)", value="40,180,30")
     
     st.markdown("---")
-    
-    if st.button("🔄 Atualizar Dashboard", use_container_width=True):
+    if st.button("🔄 Atualizar Dashboard", width='stretch'):
         st.rerun()
 
 # Processar dados
@@ -346,11 +287,10 @@ except Exception as e:
     df_inventario = pd.DataFrame(DEFAULT_INVENTARIO)
     preco_unitario = 28.00
 
-# Calcular dados
 df_financeiro = calcular_custos(df_inventario, preco_unitario)
 
 # ==========================================
-# 4. MÉTRICAS PRINCIPAIS
+# MÉTRICAS
 # ==========================================
 st.markdown('<p class="section-title">📊 Indicadores Gerais</p>', unsafe_allow_html=True)
 
@@ -398,7 +338,7 @@ with col4:
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
 # ==========================================
-# 5. GRÁFICOS
+# GRÁFICOS
 # ==========================================
 fig_consumo, fig_custos, fig_comparativo = criar_graficos(df_inventario, df_financeiro, preco_unitario)
 
@@ -415,7 +355,7 @@ st.plotly_chart(fig_comparativo, use_container_width=True)
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
 # ==========================================
-# 6. TABELAS DE DADOS
+# TABELAS
 # ==========================================
 tab1, tab2 = st.tabs(["📋 Inventário Detalhado", "💰 Resumo Financeiro"])
 
@@ -473,7 +413,7 @@ with tab2:
 st.markdown('<hr class="divider">', unsafe_allow_html=True)
 
 # ==========================================
-# 7. DOWNLOAD
+# DOWNLOAD
 # ==========================================
 st.markdown('<p class="section-title">📥 Exportar Relatórios</p>', unsafe_allow_html=True)
 
@@ -486,7 +426,7 @@ with col1:
         data=csv_inventario,
         file_name="inventario_lubrificacao.csv",
         mime="text/csv",
-        use_container_width=True
+        width='stretch'
     )
 
 with col2:
@@ -496,11 +436,10 @@ with col2:
         data=csv_financeiro,
         file_name="resumo_financeiro.csv",
         mime="text/csv",
-        use_container_width=True
+        width='stretch'
     )
 
 with col3:
-    # Combinar dados em um único arquivo
     df_completo = df_inventario.copy()
     df_completo["Custo_Anual_Estimado"] = df_completo["Consumo_Anual_Geral_L"] * preco_unitario
     csv_completo = df_completo.to_csv(index=False).encode('utf-8')
@@ -509,11 +448,11 @@ with col3:
         data=csv_completo,
         file_name="dados_completos_lubrificacao.csv",
         mime="text/csv",
-        use_container_width=True
+        width='stretch'
     )
 
 # ==========================================
-# 8. RODAPÉ
+# RODAPÉ
 # ==========================================
 st.markdown("""
 <div style="text-align: center; padding: 1.5rem; background: #f8fafc; border-radius: 10px; margin-top: 2rem;">
@@ -522,9 +461,6 @@ st.markdown("""
     </p>
     <p style="color: #9ca3af; margin: 0.25rem 0 0 0; font-size: 0.85rem;">
         Dashboard interativo para planejamento estratégico • Dados atualizados em tempo real
-    </p>
-    <p style="color: #d1d5db; margin: 0.5rem 0 0 0; font-size: 0.75rem;">
-        Valores monetários em Reais (R$)
     </p>
 </div>
 """, unsafe_allow_html=True)
